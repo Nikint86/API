@@ -3,11 +3,10 @@ import os
 from dotenv import load_dotenv
 from urllib.parse import urlparse
 
-load_dotenv()
-token = os.getenv("TOKEN")
 
-shorten_link_url = 'https://api.vk.com/method/utils.getShortLink'
-link_stats_url = 'https://api.vk.com/method/utils.getLinkStats'
+SHORTEN_LINK_URL = 'https://api.vk.com/method/utils.getShortLink'
+LINK_STATS_URL = 'https://api.vk.com/method/utils.getLinkStats'
+
 
 def shorten_link(token, url):
     payload = {
@@ -16,10 +15,11 @@ def shorten_link(token, url):
         "url": url,
         "private": "0"
     }
-    response = requests.get(shorten_link_url, params=payload)
+    response = requests.get(SHORTEN_LINK_URL, params=payload)
     response.raise_for_status()
-    new_side = response.json()
-    return new_side['response']['short_url']
+    request_response = response.json()
+    return request_response['response']['short_url']
+
 
 def count_clicks(token, short_url):
     parsed = urlparse(short_url)
@@ -32,32 +32,34 @@ def count_clicks(token, short_url):
         "private": "0",
         "key": path
     }
-    response = requests.get(link_stats_url, params=payload)
+    response = requests.get(LINK_STATS_URL, params=payload)
     response.raise_for_status()
     stats = response.json()
     return stats['response']['stats'][0]['views']
+
 
 def is_short_link(url):
     parsed_url = urlparse(url)
     return parsed_url.netloc == 'vk.cc'
 
-def process_user_input():
- url_fut_side = input("Введите ссылку: ")
+
+def main():
+ load_dotenv()
+ token = os.environ["VK_TOKEN"]
+ url_input = input("Введите ссылку: ")
  try:
-    if is_short_link(url_fut_side):
-        clicks = count_clicks(token, url_fut_side)
+    if is_short_link(url_input):
+        clicks = count_clicks(token, url_input)
         print('Количество просмотров:', clicks)
     else:
-        short_link = shorten_link(token, url_fut_side)
+        short_link = shorten_link(token, url_input)
         print('Сокращенная ссылка:', short_link)
  except requests.exceptions.HTTPError as e:
     print("Ошибка при запросе:", str(e))
 
+
 if __name__ == "__main__":
-    process_user_input()
+    main()
 
 
 
-#"dvmn.org/modules"
-
-"https://dvmn.org/modules/web-api/lesson/vk-short-link/#8"
